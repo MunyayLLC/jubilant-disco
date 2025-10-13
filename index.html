@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Joke Generator</title>
+    <link rel="stylesheet" href="https://unpkg.com/@primer/css@^17.0.0/dist/primer.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f6f8fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .joke-container {
+            min-height: 150px;
+            padding: 1.5rem;
+            background-color: #f8f9fa;
+            border: 1px solid #e1e4e8;
+            border-radius: 6px;
+            margin: 1.5rem 0;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .joke-setup {
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            color: #24292e;
+        }
+
+        .joke-punchline {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #0366d6;
+        }
+
+        .btn-joke {
+            background-color: #0366d6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .btn-joke:hover {
+            background-color: rgba(3, 102, 214, 0.9);
+        }
+
+        .btn-joke:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .error {
+            color: #d73a49;
+            background-color: #ffeaea;
+            border: 1px solid #f97583;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 1rem 0;
+        }
+
+        .welcome {
+            text-align: center;
+            color: #6c757d;
+            font-size: 1rem;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                margin-top: 1rem;
+                padding: 1.5rem;
+            }
+            
+            .joke-container {
+                padding: 1rem;
+                min-height: 120px;
+            }
+            
+            .joke-setup,
+            .joke-punchline {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .btn-joke {
+                width: 100%;
+                padding: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center; color: #24292e; margin-bottom: 1rem;">Random Joke Generator</h1>
+        <p style="text-align: center; color: #6c757d; margin-bottom: 2rem;">Click the button below to get a random joke!</p>
+        
+        <div id="joke-container" class="joke-container">
+            <div class="welcome">
+                🎭 Ready for a laugh? Click "Get a Joke" to start!
+            </div>
+        </div>
+        
+        <button id="joke-btn" class="btn-joke">Get a Joke</button>
+        
+        <div id="error-container"></div>
+    </div>
+
+    <script>
+        class JokeGenerator {
+            constructor() {
+                this.jokeBtn = document.getElementById('joke-btn');
+                this.jokeContainer = document.getElementById('joke-container');
+                this.errorContainer = document.getElementById('error-container');
+                this.apiUrl = 'https://official-joke-api.appspot.com/jokes/random';
+                
+                // Demo jokes for fallback when API is not available
+                this.demoJokes = [
+                    {
+                        setup: "Why don't scientists trust atoms?",
+                        punchline: "Because they make up everything!"
+                    },
+                    {
+                        setup: "What do you call a fake noodle?",
+                        punchline: "An impasta!"
+                    },
+                    {
+                        setup: "Why did the scarecrow win an award?",
+                        punchline: "He was outstanding in his field!"
+                    },
+                    {
+                        setup: "What do you call a dinosaur that crashes his car?",
+                        punchline: "Tyrannosaurus Wrecks!"
+                    },
+                    {
+                        setup: "Why don't eggs tell jokes?",
+                        punchline: "They'd crack each other up!"
+                    }
+                ];
+                
+                this.init();
+            }
+            
+            init() {
+                this.jokeBtn.addEventListener('click', () => this.fetchJoke());
+            }
+            
+            async fetchJoke() {
+                this.showLoading();
+                this.clearError();
+                
+                try {
+                    const response = await fetch(this.apiUrl);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const jokeData = await response.json();
+                    this.displayJoke(jokeData);
+                    
+                } catch (error) {
+                    // Fallback to demo jokes if API fails
+                    console.log('API failed, using demo joke:', error.message);
+                    const randomJoke = this.demoJokes[Math.floor(Math.random() * this.demoJokes.length)];
+                    this.displayJoke(randomJoke);
+                    
+                    // Show a subtle notice about demo mode
+                    this.showDemoNotice();
+                } finally {
+                    this.hideLoading();
+                }
+            }
+            
+            showLoading() {
+                this.jokeBtn.disabled = true;
+                this.jokeBtn.textContent = 'Getting joke...';
+                this.jokeContainer.innerHTML = '<div class="loading">🔄 Fetching a fresh joke...</div>';
+            }
+            
+            hideLoading() {
+                this.jokeBtn.disabled = false;
+                this.jokeBtn.textContent = 'Get a Joke';
+            }
+            
+            displayJoke(joke) {
+                this.jokeContainer.innerHTML = `
+                    <div class="joke-setup">${this.escapeHtml(joke.setup)}</div>
+                    <div class="joke-punchline">${this.escapeHtml(joke.punchline)}</div>
+                `;
+            }
+            
+            showError(error) {
+                let errorMessage = 'Sorry, we couldn\'t fetch a joke right now. ';
+                
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMessage += 'Please check your internet connection and try again.';
+                } else if (error.message.includes('HTTP error')) {
+                    errorMessage += 'The joke service is temporarily unavailable.';
+                } else {
+                    errorMessage += 'Please try again later.';
+                }
+                
+                this.errorContainer.innerHTML = `
+                    <div class="error">
+                        <strong>Oops!</strong> ${errorMessage}
+                    </div>
+                `;
+                
+                this.jokeContainer.innerHTML = '<div class="welcome">😔 No joke this time, but try again!</div>';
+            }
+            
+            showDemoNotice() {
+                // Only show this in demo environments
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    this.errorContainer.innerHTML = `
+                        <div style="background-color: #e3f2fd; border: 1px solid #2196f3; color: #1976d2; padding: 0.75rem; border-radius: 4px; margin-top: 1rem; font-size: 0.9rem;">
+                            <strong>Demo Mode:</strong> Using sample jokes since external API is not available in this environment.
+                        </div>
+                    `;
+                }
+            }
+            
+            clearError() {
+                this.errorContainer.innerHTML = '';
+            }
+            
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+        
+        // Initialize the joke generator when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new JokeGenerator();
+        });
+    </script>
+</body>
+</html>
