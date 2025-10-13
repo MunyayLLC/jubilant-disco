@@ -1,0 +1,63 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+    ":dependencyDashboard",
+    ":semanticCommits",
+    ":automergeDisabled"
+  ],
+  "rangeStrategy": "bump",
+  "schedule": ["before 4am on Monday"],
+  "labels": ["dependencies"],
+  "assignees": ["joe10832"],
+  "packageRules": [
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": [
+        "lodash",
+        "express",
+        "jsonwebtoken",
+        "react",
+        "react-dom",
+        "vue",
+        "angular",
+        "next",
+        "nuxt",
+        "webpack"
+      ],
+      "automerge": false
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": [
+        "lodash",
+        "express",
+        "jsonwebtoken",
+        "react",
+        "react-dom",
+        "vue",
+        "angular",
+        "next",
+        "nuxt",
+        "webpack"
+      ],
+      "automerge": false
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": false
+    }
+  ],
+  "npm": {
+    "stabilityDays": 7
+  },
+  "github-actions": {
+    "enabled": true
+  }
+}
